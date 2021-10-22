@@ -10,7 +10,6 @@ const db = mysql.createConnection(
         password: process.env.DB_PASSWORD,
         database: "employees_db"
     },
-    console.log('Connected to the employees_db database.')
 );
 
 const initialQs = [
@@ -18,7 +17,7 @@ const initialQs = [
         type: 'list',
         name: 'intent',
         message: 'What would you like to do?',
-        choices: ['View All Employees', 'Add Employee', 'Update Employee Role', 'View All Roles', 'Add Role', 'View All Departments', 'Add Department', 'Quit']
+        choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add Department', 'Add Role', 'Add Employee', 'Update Employee Role', 'Quit']
     },
 ];
 
@@ -26,26 +25,26 @@ function employeeTracker() {
     inquirer.prompt(initialQs)
         .then(function userIntent(data) {
             switch (data.intent) {
+                case 'View All Departments':
+                    viewDepartments();
+                    break;
+                case 'View All Roles':
+                    viewRoles();
+                    break;
                 case 'View All Employees':
                     viewEmployees();
+                    break;
+                case 'Add Department':
+                    addDepartment();
+                    break;
+                case 'Add Role':
+                    addRole();
                     break;
                 case 'Add Employee':
                     addEmployee();
                     break;
                 case 'Update Employee Role':
                     updateEmployee();
-                    break;
-                case 'View All Roles':
-                    viewRoles();
-                    break;
-                case 'Add Role':
-                    addRole();
-                    break;
-                case 'View All Departments':
-                    viewDepartments();
-                    break;
-                case 'Add Department':
-                    addDepartment();
                     break;
                 case 'Quit':
                     process.exit();
@@ -175,7 +174,7 @@ const updateEmployee = () => {
 };
 
 const viewRoles = () => {
-    db.query("SELECT role.id, role.title, role.salary, department.name AS department FROM role INNER JOIN department ON role.department_id = department.id ORDER BY role.id ASC", (err, results) => {
+    db.query("SELECT role.id, role.title, department.name AS department, role.salary FROM role INNER JOIN department ON role.department_id = department.id ORDER BY role.id ASC", (err, results) => {
         console.log('\n');
         console.table(results);
         console.log('\n');
@@ -223,7 +222,7 @@ const addRole = () => {
 };
 
 const viewDepartments = () => {
-    db.query("SELECT * FROM department", (err, results) => {
+    db.query("SELECT department.id, department.name AS department FROM department", (err, results) => {
         console.log('\n');
         console.table(results);
         console.log('\n');
