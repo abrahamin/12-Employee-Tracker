@@ -25,36 +25,37 @@ const initialQs = [
 function employeeTracker() {
     inquirer.prompt(initialQs)
         .then(function userIntent(data) {
-            if (data.intent === 'View All Employees') {
-                viewEmployees();
-            }
-            if (data.intent === 'Add Employee') {
-                addEmployee();
-            }
-            if (data.intent === 'Update Employee Role') {
-                updateEmployee();
-            }
-            if (data.intent === 'View All Roles') {
-                viewRoles();
-            }
-            if (data.intent === 'Add Role') {
-                addRole();
-            }
-            if (data.intent === 'View All Departments') {
-                viewDepartments();
-            }
-            if (data.intent === 'Add Department') {
-                addDepartment();
-            }
-            if (data.intent === 'Quit') {
-                
+            switch (data.intent) {
+                case 'View All Employees':
+                    viewEmployees();
+                    break;
+                case 'Add Employee':
+                    addEmployee();
+                    break;
+                case 'Update Employee Role':
+                    updateEmployee();
+                    break;
+                case 'View All Roles':
+                    viewRoles();
+                    break;
+                case 'Add Role':
+                    addRole();
+                    break;
+                case 'View All Departments':
+                    viewDepartments();
+                    break;
+                case 'Add Department':
+                    addDepartment();
+                    break;
+                case 'Quit':
+                    process.exit();
             }
         })
         .catch((err) => console.error(err))
 };
 
 const viewEmployees = () => {
-    db.query("SELECT * FROM employee", (err, results) => {
+    db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON manager.id = employee.manager_id", (err, results) => {
         console.log('\n');
         console.table(results);
         console.log('\n');
@@ -66,23 +67,23 @@ const addEmployee = () => {
     let roleArray = [];
     let managerArray = [];
 
-    db.query("SELECT role.id as Id, role.title as Title FROM role", (err, results) => {
+    db.query("SELECT role.id, role.title FROM role", (err, results) => {
         if (err) {
             console.error(err)
         } else {
             results.forEach(role => {
-                let roleName = `${role.Id} ${role.Title}`
+                let roleName = `${role.id} ${role.title}`
                 roleArray.push(roleName)
             });
         };
     });
 
-    db.query("SELECT employee.id as Id, employee.first_name as First, employee.last_name as Last FROM employee", (err, results) => {
+    db.query("SELECT employee.id, employee.first_name, employee.last_name FROM employee", (err, results) => {
         if (err) {
             console.error(err)
         } else {
             results.forEach(manager => {
-                let managerName = `${manager.Id} ${manager.First} ${manager.Last}`
+                let managerName = `${manager.id} ${manager.first_name} ${manager.last_name}`
                 managerArray.push(managerName)
             });
         };
@@ -119,23 +120,23 @@ const updateEmployee = async () => {
     let employeeArray = [];
     let assignArray = [];
 
-    db.query("SELECT employee.id as Id, employee.first_name as First, employee.last_name as Last FROM employee", (err, results) => {
+    db.query("SELECT employee.id, employee.first_name, employee.last_name FROM employee", (err, results) => {
         if (err) {
             console.error(err)
         } else {
             results.forEach(employee => {
-                let employeeName = `${employee.Id} ${employee.First} ${employee.Last}`
+                let employeeName = `${employee.id} ${employee.first_name} ${employee.last_name}`
                 employeeArray.push(employeeName)
             });
         };
     });
 
-    db.query("SELECT role.id as Id, role.title as Title FROM role", (err, results) => {
+    db.query("SELECT role.id, role.title FROM role", (err, results) => {
         if (err) {
             console.error(err)
         } else {
             results.forEach(assign => {
-                let assignName = `${assign.Id} ${assign.Title}`
+                let assignName = `${assign.id} ${assign.title}`
                 assignArray.push(assignName)
             });
         };
@@ -159,20 +160,23 @@ const updateEmployee = async () => {
 };
 
 const viewRoles = () => {
-    db.query("SELECT * FROM role", (err, results) => {
-        console.table(results)
+    db.query("SELECT role.id, role.title, role.salary, department.name AS department FROM role INNER JOIN department ON role.department_id = department.id", (err, results) => {
+        console.log('\n');
+        console.table(results);
+        console.log('\n');
+        employeeTracker()
     });
 };
 
 const addRole = () => {
     let departmentArray = [];
 
-    db.query("SELECT department.id as Id, department.name as Name FROM department", (err, results) => {
+    db.query("SELECT department.id, department.name FROM department", (err, results) => {
         if (err) {
             console.error(err)
         } else {
             results.forEach(department => {
-                let departmentName = `${department.Id} ${department.Name}`
+                let departmentName = `${department.id} ${department.name}`
                 departmentArray.push(departmentName)
             });
         };
@@ -201,7 +205,10 @@ const addRole = () => {
 
 const viewDepartments = () => {
     db.query("SELECT * FROM department", (err, results) => {
-        console.table(results)
+        console.log('\n');
+        console.table(results);
+        console.log('\n');
+        employeeTracker()
     });
 }
 
