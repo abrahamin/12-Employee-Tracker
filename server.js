@@ -55,7 +55,7 @@ function employeeTracker() {
 };
 
 const viewEmployees = () => {
-    db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON manager.id = employee.manager_id", (err, results) => {
+    db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON manager.id = employee.manager_id ORDER BY employee.id ASC", (err, results) => {
         console.log('\n');
         console.table(results);
         console.log('\n');
@@ -113,10 +113,15 @@ const addEmployee = () => {
             choices: managerArray
         },
     ])
+    .then(function (answer) {
+        let addedRole = parseInt(answer.role);
+        let addedManager = parseInt(answer.manager);
+        db.query("INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)", [answer.first, answer.last, addedRole, addedManager], (err, results) => {viewEmployees()})
+    })
     .catch((err) => err ? console.log(err) : console.log('Oops!'));
 };
 
-const updateEmployee = async () => {
+const updateEmployee = () => {
     let employeeArray = [];
     let assignArray = [];
 
@@ -142,7 +147,12 @@ const updateEmployee = async () => {
         };
     });
 
-    await inquirer.prompt([
+    inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'promotion',
+            message: 'Is the employee getting a promotion?',
+        },
         {
             type: 'list',
             name: 'employee',
@@ -156,11 +166,16 @@ const updateEmployee = async () => {
             choices: assignArray
         },
     ])
+    .then(function (answer) {
+        let updatedEmployee = parseInt(answer.employee);
+        let updatedRole = parseInt(answer.role);
+        db.query("UPDATE employee SET role_id = ? WHERE id = ?", [updatedRole, updatedEmployee], (err, results) => {console.log("Updated successfully!"); viewEmployees()})
+    })
     .catch((err) => err ? console.log(err) : console.log('Oops!'));
 };
 
 const viewRoles = () => {
-    db.query("SELECT role.id, role.title, role.salary, department.name AS department FROM role INNER JOIN department ON role.department_id = department.id", (err, results) => {
+    db.query("SELECT role.id, role.title, role.salary, department.name AS department FROM role INNER JOIN department ON role.department_id = department.id ORDER BY role.id ASC", (err, results) => {
         console.log('\n');
         console.table(results);
         console.log('\n');
@@ -200,6 +215,10 @@ const addRole = () => {
             choices: departmentArray
         },
     ])
+    .then(function (answer) {
+        let addedDepartment = parseInt(answer.department);
+        db.query("INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)", [answer.name, answer.salary, addedDepartment], (err, results) => {viewRoles()})
+    })
     .catch((err) => err ? console.log(err) : console.log('Oops!'));
 };
 
@@ -220,6 +239,9 @@ const addDepartment = () => {
             message: 'What is the name of the department?',
         },
     ])
+    .then(function (answer) {
+        db.query("INSERT INTO department (name) VALUES (?)", [answer.name], (err, results) => {viewDepartments()})
+    })
     .catch((err) => err ? console.log(err) : console.log('Oops!'));
 }
 
