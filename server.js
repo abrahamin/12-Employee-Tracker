@@ -1,8 +1,10 @@
+// necessary imports
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
 const dotenv = require('dotenv').config();
 
+// connect to database
 const db = mysql.createConnection(
     {
         host: 3306,
@@ -12,6 +14,7 @@ const db = mysql.createConnection(
     },
 );
 
+// questions for initial prompt
 const initialQs = [
     {
         type: 'list',
@@ -21,6 +24,7 @@ const initialQs = [
     },
 ];
 
+// overarching function with switch case options depending on user input to initial prompt
 function employeeTracker() {
     inquirer.prompt(initialQs)
         .then(function userIntent(data) {
@@ -53,6 +57,7 @@ function employeeTracker() {
         .catch((err) => console.error(err))
 };
 
+// displays all employees via console.table
 const viewEmployees = () => {
     db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee manager ON manager.id = employee.manager_id ORDER BY employee.id ASC", (err, results) => {
         console.log('\n');
@@ -62,6 +67,7 @@ const viewEmployees = () => {
     });
 };
 
+// adding a new employee
 const addEmployee = () => {
     let roleArray = [];
     let managerArray = [];
@@ -120,6 +126,7 @@ const addEmployee = () => {
     .catch((err) => err ? console.log(err) : console.log('Oops!'));
 };
 
+// updating an existing employee
 const updateEmployee = () => {
     let employeeArray = [];
     let assignArray = [];
@@ -173,6 +180,7 @@ const updateEmployee = () => {
     .catch((err) => err ? console.log(err) : console.log('Oops!'));
 };
 
+// displays all roles via console.table
 const viewRoles = () => {
     db.query("SELECT role.id, role.title, department.name AS department, role.salary FROM role INNER JOIN department ON role.department_id = department.id ORDER BY role.id ASC", (err, results) => {
         console.log('\n');
@@ -182,6 +190,7 @@ const viewRoles = () => {
     });
 };
 
+// adding a new role
 const addRole = () => {
     let departmentArray = [];
 
@@ -221,6 +230,7 @@ const addRole = () => {
     .catch((err) => err ? console.log(err) : console.log('Oops!'));
 };
 
+// displays all departments via console.table
 const viewDepartments = () => {
     db.query("SELECT department.id, department.name AS department FROM department", (err, results) => {
         console.log('\n');
@@ -230,6 +240,7 @@ const viewDepartments = () => {
     });
 }
 
+// adding a new department
 const addDepartment = () => {
     inquirer.prompt([
         {
@@ -244,4 +255,5 @@ const addDepartment = () => {
     .catch((err) => err ? console.log(err) : console.log('Oops!'));
 }
 
+// initializes application
 employeeTracker();
